@@ -56,7 +56,7 @@ jobs:
         run: |
           docker stop strt || true
       
-      - name: Launch app
+      - name: Launch app (docker compose)
         run: |
           cd src/
           docker compose up --build -d
