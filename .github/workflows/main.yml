@@ -2,15 +2,59 @@ name: ase-lab
 on:
   push:
     branches:
+      - main
   pull_request:
     branches:
+      - main
 
 jobs:
-  job_name:
-    runs-on:
-    steps:
-      - name:
-        uses:
+  build:
+    runs-on: ubuntu-latest
 
-      - name:
-        uses:
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+
+      - name: Install Newman
+        uses: npm install -g newman
+
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker images
+        working-directory: src
+        run: docker compose build
+
+      - name: Build calc microservice
+        run: docker build -t calc-service ./calc
+
+      - name: Run calc container
+        run: docker run -d --name calc-container -p 5000:5000 calc-service
+
+      - name: Run Newman tests for calc
+        run: newman run tests/calc.postman_collection.json
+        continue-on-error: true
+
+      - name: Stop and remove calc container
+        if: always()
+        run: docker stop calc-container && docker rm calc-container
+
+      - name: Build string microservice
+        run: docker build -t string-service ./string
+
+      - name: Run string container
+        run: docker run -d --name string-container -p 5000:5000 string-service
+
+      - name: Run Newman tests for string
+        run: newman run tests/string.postman_collection.json
+        continue-on-error: true
+
+      - name: Stop and remove calc container
+        if: always()
+        run: docker stop calc-container && docker rm calc-container
+
+    
+  
